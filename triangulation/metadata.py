@@ -1,5 +1,6 @@
 from libxmp.utils import file_to_dict
 from dataclasses import dataclass
+from decimal import Decimal, getcontext
 
 __all__ = [
     "read_metadata"
@@ -26,6 +27,9 @@ ROLL = f"{DJI_PREFIX}GimbalRollDegree"
 LATITUDE = f"{DJI_PREFIX}GpsLatitude"
 LONGITUDE = f"{DJI_PREFIX}GpsLongitude"
 
+PRECISION = 12
+
+getcontext().prec = PRECISION
 
 def _metadata_to_dict(metadata: list[tuple]) -> dict[str, str]:
     """
@@ -47,6 +51,6 @@ def read_metadata(file: str) -> DJIMetadata:
         yaw=float(metadata[YAW]),
         pitch=float(metadata[PITCH]),
         roll=float(metadata[ROLL]),
-        latitude=float(metadata[LATITUDE]),
-        longitude=float(metadata[LONGITUDE]),
+        latitude=Decimal(metadata[LATITUDE]),
+        longitude=Decimal(metadata[LONGITUDE]),
     )
