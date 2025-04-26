@@ -4,7 +4,7 @@ from metadata import read_metadata
 from export import write_file
 
 
-def write_flight_plan(image_pairs: list[tuple[image_bbox, image_bbox]], output_file="output.kmz", plane_distance=3.0, descend=1.5):
+def write_flight_plan(image_pairs: list[tuple[image_bbox, image_bbox]], output_file="output.kmz", plane_distance=2.0, descend=1.5):
     """
     Writes a flight plan from the image paris to ``output_file``.
     The drone will pass ``plane_distance``m (default=3) in front of the bbox
