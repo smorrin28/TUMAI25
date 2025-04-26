@@ -6,6 +6,7 @@ from pathlib import Path
 from dataclasses import dataclass, asdict
 import json
 
+
 @dataclass
 class Coordinates:
     latitude: float
