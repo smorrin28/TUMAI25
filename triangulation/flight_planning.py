@@ -16,10 +16,9 @@ def generate_flight_plan(
     top_left: Point,
     bottom_right: Point,
     drone_position: Position,
-    elevation: float,
     plane_distance=3.0,
     descend=1.5,
-    box_max_height=3.0,
+    box_max_height=4.0,
     box_min_height=1.0,
 ):
     """
@@ -76,8 +75,8 @@ def generate_flight_plan(
         displaced_points.append([lat, lon, alt])
 
     displaced_points = np.array(displaced_points)
-    current_altitude = elevation + box_max_height
-    min_altitude = elevation + box_min_height
+    current_altitude = box_max_height
+    min_altitude = box_min_height
     start_lat, start_long = [float(x) for x in displaced_points[0][:2]]
     end_lat, end_long = [float(x) for x in displaced_points[-1][:2]]
 

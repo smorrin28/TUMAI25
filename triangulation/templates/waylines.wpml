@@ -22,7 +22,7 @@
     </wpml:missionConfig>
     <Folder>
       <wpml:templateId>0</wpml:templateId>
-      <wpml:executeHeightMode>WGS84</wpml:executeHeightMode>
+      <wpml:executeHeightMode>relativeToStartPoint</wpml:executeHeightMode>
       <wpml:waylineId>0</wpml:waylineId>
       <wpml:distance>0</wpml:distance>
       <wpml:duration>6.77999925613403</wpml:duration>

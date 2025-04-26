@@ -30,7 +30,7 @@
       <wpml:templateId>0</wpml:templateId>
       <wpml:waylineCoordinateSysParam>
         <wpml:coordinateMode>WGS84</wpml:coordinateMode>
-        <wpml:heightMode>EGM96</wpml:heightMode>
+        <wpml:heightMode>relativeToStartPoint</wpml:heightMode>
       </wpml:waylineCoordinateSysParam>
       <wpml:autoFlightSpeed>5</wpml:autoFlightSpeed>
       <wpml:globalHeight>20</wpml:globalHeight>
