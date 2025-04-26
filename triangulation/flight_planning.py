@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from pyproj import Transformer
 from export import write_file
 
-Point = np.array
+Point = np.typing.NDArray
 
 @dataclass
 class Position:
@@ -15,7 +15,7 @@ class Position:
 def generate_flight_plan(
     top_left: Point,
     bottom_right: Point,
-    drone_position: Point,
+    drone_position: Position,
     PLANE_DISTANCE=3.0,
     DESCEND=1.5,
 ):
@@ -77,7 +77,7 @@ def generate_flight_plan(
 
     flight_path = []
     while current_altitude > min_altitude:
-        # fly from left to right, then
+        # fly from left to right, then back
         first_point = [start_lat, start_long, current_altitude]
         second_point = [end_lat, end_long, current_altitude]
         flight_path.append(first_point)
