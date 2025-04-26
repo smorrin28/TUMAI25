@@ -1,22 +1,17 @@
 import chevron
 import tempfile
 from pathlib import Path
-from dataclasses import dataclass
 from zipfile import ZipFile
+import numpy as np
 
-@dataclass
-class Waypoint:
-    latitude: float
-    longitude: float
-    absolute_height: float
-
+Waypoint = np.typing.NDArray | list[float, float, float]
 
 def write_file(waypoints: list[Waypoint], output_filename="output.kmz"):
     waypoints = [
         {   
-            "latitude": wp.latitude,
-            "longitude": wp.longitude, 
-            "absoluteHeight": wp.absolute_height, 
+            "latitude": wp[0],
+            "longitude": wp[1],
+            "absoluteHeight": wp[2],
             "index": i 
         } 
         for i, wp in enumerate(waypoints)

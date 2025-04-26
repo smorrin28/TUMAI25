@@ -1,6 +1,5 @@
 from libxmp.utils import file_to_dict
 from dataclasses import dataclass
-from decimal import Decimal, getcontext
 from pathlib import Path
 
 __all__ = [
@@ -14,8 +13,8 @@ class DJIMetadata:
     yaw: float
     pitch: float
     roll: float
-    latitude: Decimal
-    longitude: Decimal
+    latitude: float
+    longitude: float
     focal_length: float
     image_width: int
     image_height: int
@@ -37,9 +36,7 @@ LONGITUDE = f"{DJI_PREFIX}GpsLongitude"
 FOCAL_LENGTH = f"{EXIF_PREFIX}FocalLength"
 IMAGE_WIDTH = f"{EXIF_PREFIX}PixelXDimension"
 IMAGE_HEIGHT = f"{EXIF_PREFIX}PixelYDimension"
-PRECISION = 12
 
-getcontext().prec = PRECISION
 
 def _metadata_to_dict(metadata: list[tuple]) -> dict[str, str]:
     """
@@ -67,8 +64,8 @@ def read_metadata(file_path: str | Path) -> DJIMetadata:
         yaw=float(dji_metadata[YAW]),
         pitch=float(dji_metadata[PITCH]),
         roll=float(dji_metadata[ROLL]),
-        latitude=Decimal(dji_metadata[LATITUDE]),
-        longitude=Decimal(dji_metadata[LONGITUDE]),
+        latitude=float(dji_metadata[LATITUDE]),
+        longitude=float(dji_metadata[LONGITUDE]),
         focal_length=float(eval(exif_metadata[FOCAL_LENGTH])),
         image_width=int(exif_metadata[IMAGE_WIDTH]),
         image_height=int(exif_metadata[IMAGE_HEIGHT])

@@ -2,19 +2,18 @@ import numpy as np
 
 from dataclasses import dataclass
 from pyproj import Transformer
-from pprint import pprint
+from export import write_file
+
+Point = np.array
 
 @dataclass
-class Point:
+class Position:
     latitude: float
     longitude: float
     altitude: float
 
-
 def generate_flight_plan(
     top_left: Point,
-    top_right: Point,
-    bottom_left: Point,
     bottom_right: Point,
     drone_position: Point,
     PLANE_DISTANCE=3.0,
@@ -28,32 +27,30 @@ def generate_flight_plan(
     The distance from the plane will be `PLANE_DISTANCE` (default: 3) meters and
     the drone will descend `DESCEND` (default: 1.5) meters after each row. 
     """
-    points = np.array([
-        [top_left.latitude, top_left.longitude, top_left.altitude],
-        [top_right.latitude, top_right.longitude, top_right.altitude],
-        [bottom_left.latitude, bottom_left.longitude, bottom_left.altitude],
-        [bottom_right.latitude, bottom_right.longitude, bottom_right.altitude],
-    ])
+
+    x1, y1, z1 = top_left
+    x2, y2, z2 = bottom_right
+
+    # Define the 4 plane points (in ECEF):
+    # Top-left, Top-right, Bottom-left, Bottom-right
+    plane_points_ecef = [
+        np.array([x1, y1, z1]),  # Top-left
+        np.array([x2, y1, z1]),  # Top-right (same y as top-left, x from bottom-right)
+        np.array([x1, y2, z2]),  # Bottom-left (same x as top-left, y from bottom-right)
+        np.array([x2, y2, z2]),  # Bottom-right
+    ]
+    plane_points_ecef = np.array(plane_points_ecef)
 
     wgs84_to_ecef = Transformer.from_crs("EPSG:4326", "EPSG:4978", always_xy=True)
     ecef_to_wgs84 = Transformer.from_crs("EPSG:4978", "EPSG:4326", always_xy=True)
 
-    ecef_points = []
-    for lat, long, alt in points:
-        x, y, z = wgs84_to_ecef.transform(long, lat, alt)
-        ecef_points.append([x, y, z])
-    ecef_points = np.array(ecef_points)
+    v1 = plane_points_ecef[1] - plane_points_ecef[0]
+    v2 = plane_points_ecef[2] - plane_points_ecef[0]
+    normal = np.cross(v1, v2)
+    normal /= np.linalg.norm(normal)
 
     drone_ecef = np.array(wgs84_to_ecef.transform(drone_position.longitude, drone_position.latitude, drone_position.altitude))
 
-
-    # Compute two vectors lying on the plane
-    v1 = ecef_points[1] - ecef_points[0]
-    v2 = ecef_points[2] - ecef_points[0]
-
-    # Compute the normal vector (cross product) and normalize it
-    normal = np.cross(v1, v2)
-    normal /= np.linalg.norm(normal)
 
     inverted_normal = -normal
     # check which direction the normal vector should face
@@ -64,7 +61,7 @@ def generate_flight_plan(
     d = PLANE_DISTANCE
 
     # Displace points
-    displaced_ecef_points = ecef_points + d * normal
+    displaced_ecef_points = plane_points_ecef + d * normal
 
     # Convert displaced points back to lat/lon/alt
     displaced_points = []
@@ -90,14 +87,3 @@ def generate_flight_plan(
         start_lat, start_long, end_lat, end_long = end_lat, end_long, start_lat, start_long
 
     return flight_path
-
-if __name__ == "__main__":
-    pprint(
-        generate_flight_plan(
-            Point(49.09935094275363, 12.180929417801106, 496.0389585290104),
-            Point(49.09934680865197, 12.18092950731804, 495.8597035156563),
-            Point(49.09934817409882, 12.180937450325327, 495.46850503236055),
-            Point(49.0993516569836, 12.180937365722043, 495.60829266440123),
-            Point(49.0993516569836, 12.180937365722043, 495.60829266440123),
-        )
-    )
