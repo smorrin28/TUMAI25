@@ -13,11 +13,15 @@ class DJIMetadata:
     yaw: float
     pitch: float
     roll: float
-    latitude: float
-    longitude: float
-
+    latitude: Decimal
+    longitude: Decimal
+    focal_length: float
+    image_width: int
+    image_height: int
 DJI_KEY = "http://www.dji.com/drone-dji/1.0/"
+EXIF_KEY = "http://ns.adobe.com/exif/1.0/"
 DJI_PREFIX = "drone-dji:"
+EXIF_PREFIX = "exif:"
 
 RELATIVE_ALTITUDE = f"{DJI_PREFIX}RelativeAltitude"
 ABSOLUTE_ALTITUDE = f"{DJI_PREFIX}AbsoluteAltitude"
@@ -26,7 +30,9 @@ PITCH = f"{DJI_PREFIX}GimbalPitchDegree"
 ROLL = f"{DJI_PREFIX}GimbalRollDegree"
 LATITUDE = f"{DJI_PREFIX}GpsLatitude"
 LONGITUDE = f"{DJI_PREFIX}GpsLongitude"
-
+FOCAL_LENGTH = f"{EXIF_PREFIX}FocalLength"
+IMAGE_WIDTH = f"{EXIF_PREFIX}PixelXDimension"
+IMAGE_HEIGHT = f"{EXIF_PREFIX}PixelYDimension"
 PRECISION = 12
 
 getcontext().prec = PRECISION
@@ -44,13 +50,17 @@ def read_metadata(file: str) -> DJIMetadata:
     Reads the relevant metadata from `file`
     """
     xmp_data = file_to_dict(file)
-    metadata = _metadata_to_dict(xmp_data[DJI_KEY])
+    dji_metadata = _metadata_to_dict(xmp_data[DJI_KEY])
+    exif_metadata = _metadata_to_dict(xmp_data[EXIF_KEY])
     return DJIMetadata(
-        relative_altitude=float(metadata[RELATIVE_ALTITUDE]),
-        absolute_altitude=float(metadata[ABSOLUTE_ALTITUDE]),
-        yaw=float(metadata[YAW]),
-        pitch=float(metadata[PITCH]),
-        roll=float(metadata[ROLL]),
-        latitude=Decimal(metadata[LATITUDE]),
-        longitude=Decimal(metadata[LONGITUDE]),
+        relative_altitude=float(dji_metadata[RELATIVE_ALTITUDE]),
+        absolute_altitude=float(dji_metadata[ABSOLUTE_ALTITUDE]),
+        yaw=float(dji_metadata[YAW]),
+        pitch=float(dji_metadata[PITCH]),
+        roll=float(dji_metadata[ROLL]),
+        latitude=Decimal(dji_metadata[LATITUDE]),
+        longitude=Decimal(dji_metadata[LONGITUDE]),
+        focal_length=float(eval(exif_metadata[FOCAL_LENGTH])),
+        image_width=int(exif_metadata[IMAGE_WIDTH]),
+        image_height=int(exif_metadata[IMAGE_HEIGHT])
     )

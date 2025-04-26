@@ -1,3 +1,4 @@
 python-xmp-toolkit==2.0.2
 pytz==2025.2
 setuptools==79.0.1
+numpy==2.2.5
