@@ -13,7 +13,7 @@ import os
 import torch
 
 def predict_oois(folder_path: str) -> List[Results]:
-    model = YOLO('best.pt')
+    model = YOLO('model/best.pt')
     
     # run inference and dump only .txt files
     results = model.predict(
