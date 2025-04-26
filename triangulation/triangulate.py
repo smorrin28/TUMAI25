@@ -4,7 +4,6 @@ from pyproj import Transformer
 from metadata import DJIMetadata, read_metadata
 from scipy.spatial.transform import Rotation as R
 
-
 def compute_camera_matrix(metadata: DJIMetadata):
     # calculate camera matrix first
     sensor_width = 9.6
@@ -38,4 +37,3 @@ def triangulate(img1_metadata: DJIMetadata, img2_metadata: DJIMetadata, label_po
     pts4D_hom = cv2.triangulatePoints(P1, P2, label_pos1, label_pos2)
     pts3D = pts4D_hom[:3] / pts4D_hom[3]
     return pts3D.ravel()
-

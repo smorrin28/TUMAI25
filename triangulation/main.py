@@ -1,5 +1,6 @@
 from triangulate import triangulate
 from metadata import read_metadata
+from create_kml import create_kml
 from pyproj import Transformer
 from pathlib import Path
 from dataclasses import dataclass, asdict
@@ -36,6 +37,15 @@ output = {
         asdict(Coordinates(float(p.latitude), float(p.longitude), p.absolute_altitude, name=n)) for n, p in images
     ]
 }
+
+lat = output["result"]["latitude"]
+lon = output["result"]["longitude"]
+alt = output["result"]["altitude"]
+name = output["result"]["name"]
+
+
+create_kml([(lat, lon, alt)])
+
 
 with open("result.json", "w") as f:
     json.dump(output, f)
