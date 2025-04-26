@@ -172,5 +172,8 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# additional files / directories
 .DS_Store
 .idea
+image2.jpeg
