@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 from pyproj import Transformer
-from metadata import DJIMetadata
+from metadata import DJIMetadata, read_metadata
 from scipy.spatial.transform import Rotation as R
 
 
@@ -38,5 +38,16 @@ def triangulate(img1_metadata: DJIMetadata, img2_metadata: DJIMetadata, label_po
     pts4D_hom = cv2.triangulatePoints(P1, P2, label_pos1, label_pos2)
     pts3D = pts4D_hom[:3] / pts4D_hom[3]
     return pts3D.ravel()
+
+img_path1 = 'DJI_20250424192954_0007_V.jpeg'
+img_path2 = 'DJI_20250424193048_0052_V.jpeg'
+img_pos1 = (1248, 458)
+img_pos2 = (2132, 1961)
+
+img_1_metadata = read_metadata(img_path1)
+img_2_metadata = read_metadata(img_path2)
+
+result = triangulate(img_1_metadata, img_2_metadata, img_pos1, img_pos2)
+print(result)
 
 
