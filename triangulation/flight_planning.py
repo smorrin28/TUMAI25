@@ -16,8 +16,11 @@ def generate_flight_plan(
     top_left: Point,
     bottom_right: Point,
     drone_position: Position,
-    PLANE_DISTANCE=3.0,
-    DESCEND=1.5,
+    elevation: float,
+    plane_distance=3.0,
+    descend=1.5,
+    box_max_height=3.0,
+    box_min_height=1.0,
 ):
     """
     Generates a flight plan given the coordinates of the plane.
@@ -25,7 +28,10 @@ def generate_flight_plan(
     and ending in the bottom right corner (or bottom left if applicable).
     `drone_position` may be any point in front of the objects of interest.
     The distance from the plane will be `PLANE_DISTANCE` (default: 3) meters and
-    the drone will descend `DESCEND` (default: 1.5) meters after each row. 
+    the drone will descend `DESCEND` (default: 1.5) meters after each row.
+    Due to unreliable altitude data, the elevation has to be supplied.
+    The drone will ascend to up to `box_max_height` meters (default: 3.0) and
+    as low as `box_min_height` (default: 1.0).
     """
 
     x1, y1, z1 = top_left
@@ -58,7 +64,7 @@ def generate_flight_plan(
         normal = inverted_normal
 
     # Displacement amount
-    d = PLANE_DISTANCE
+    d = plane_distance
 
     # Displace points
     displaced_ecef_points = plane_points_ecef + d * normal
@@ -70,8 +76,8 @@ def generate_flight_plan(
         displaced_points.append([lat, lon, alt])
 
     displaced_points = np.array(displaced_points)
-    current_altitude = displaced_points[0][-1].item() # top left altitude
-    min_altitude = displaced_points[-1][-1].item() # bottom right altitude
+    current_altitude = elevation + box_max_height
+    min_altitude = elevation + box_min_height
     start_lat, start_long = [float(x) for x in displaced_points[0][:2]]
     end_lat, end_long = [float(x) for x in displaced_points[-1][:2]]
 
@@ -82,7 +88,7 @@ def generate_flight_plan(
         second_point = [end_lat, end_long, current_altitude]
         flight_path.append(first_point)
         flight_path.append(second_point)
-        current_altitude -= DESCEND
+        current_altitude -= descend
         # switch the latitudes & longitudes to start from the other side
         start_lat, start_long, end_lat, end_long = end_lat, end_long, start_lat, start_long
 

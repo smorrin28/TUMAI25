@@ -2,6 +2,7 @@ from bbox import get_bbox_positions, image_bbox
 from flight_planning import generate_flight_plan, Position
 from metadata import read_metadata
 from export import write_file
+from elevation import get_elevation
 
 
 def write_flight_plan(image_pairs: list[tuple[image_bbox, image_bbox]], output_file="output.kmz", plane_distance=2.0, descend=1.5):
@@ -14,8 +15,9 @@ def write_flight_plan(image_pairs: list[tuple[image_bbox, image_bbox]], output_f
     # required for the flight plan
     metadata = read_metadata(image_pairs[0][0][0])
     drone_position = Position(metadata.latitude, metadata.longitude, metadata.absolute_altitude)
-    print(drone_position)
-    flight_plan = generate_flight_plan(bbox_positions[0], bbox_positions[1], drone_position, PLANE_DISTANCE=plane_distance, DESCEND=descend)
+    elevation = get_elevation(metadata.latitude, metadata.longitude)
+    flight_plan = generate_flight_plan(bbox_positions[0], bbox_positions[1], drone_position, plane_distance=plane_distance, descend=descend, elevation=elevation)
+    print(flight_plan)
     write_file(flight_plan, output_file)
 
 
