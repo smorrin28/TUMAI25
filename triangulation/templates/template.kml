@@ -149,8 +149,8 @@
           </wpml:action>
         </wpml:actionGroup>
         <wpml:isRisky>0</wpml:isRisky>
+        </Placemark>
         {{/waypoints}}
-      </Placemark>
       <wpml:payloadParam>
         <wpml:payloadPositionIndex>0</wpml:payloadPositionIndex>
         <wpml:focusMode>firstPoint</wpml:focusMode>
