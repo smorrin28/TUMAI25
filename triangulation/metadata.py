@@ -1,6 +1,7 @@
 from libxmp.utils import file_to_dict
 from dataclasses import dataclass
 from decimal import Decimal, getcontext
+from pathlib import Path
 
 __all__ = [
     "read_metadata"
@@ -18,7 +19,10 @@ class DJIMetadata:
     focal_length: float
     image_width: int
     image_height: int
+
+
 DJI_KEY = "http://www.dji.com/drone-dji/1.0/"
+DJI_KEY_ALTERNATIVE = "http://www.uav.com/drone-dji/1.0/" # sometimes this key is used
 EXIF_KEY = "http://ns.adobe.com/exif/1.0/"
 DJI_PREFIX = "drone-dji:"
 EXIF_PREFIX = "exif:"
@@ -45,12 +49,16 @@ def _metadata_to_dict(metadata: list[tuple]) -> dict[str, str]:
         entry[0] : entry[1] for entry in metadata
     }
 
-def read_metadata(file: str) -> DJIMetadata:
+def read_metadata(file_path: str | Path) -> DJIMetadata:
     """
     Reads the relevant metadata from `file`
     """
-    xmp_data = file_to_dict(file)
-    dji_metadata = _metadata_to_dict(xmp_data[DJI_KEY])
+    xmp_data = file_to_dict(str(file_path))
+    # two different keys may be used to identify the data
+    if DJI_KEY in xmp_data:
+        dji_metadata = _metadata_to_dict(xmp_data[DJI_KEY])
+    else:
+        dji_metadata = _metadata_to_dict(xmp_data[DJI_KEY_ALTERNATIVE])
     exif_metadata = _metadata_to_dict(xmp_data[EXIF_KEY])
     return DJIMetadata(
         relative_altitude=float(dji_metadata[RELATIVE_ALTITUDE]),

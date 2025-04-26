@@ -3,6 +3,7 @@ import cv2
 from pyproj import Transformer
 from metadata import DJIMetadata, read_metadata
 from scipy.spatial.transform import Rotation as R
+from pathlib import Path
 
 def triangulate(img1_metadata: DJIMetadata, img2_metadata: DJIMetadata, label_pos1: tuple[int, int], label_pos2: tuple[int, int]):
     def compute_camera_matrix(metadata: DJIMetadata):
@@ -39,8 +40,10 @@ def triangulate(img1_metadata: DJIMetadata, img2_metadata: DJIMetadata, label_po
     pts3D = pts4D_hom[:3] / pts4D_hom[3]
     return pts3D.ravel()
 
-img_path1 = 'triangulation/DJI_20250424192954_0007_V.jpeg'
-img_path2 = 'triangulation/DJI_20250424193048_0052_V.jpeg'
+
+base_path = Path.cwd()
+img_path1 = base_path / "DJI_20250424192954_0007_V.jpeg"
+img_path2 = base_path / "DJI_20250424193048_0052_V.jpeg"
 img_pos1 = (1248, 458)
 img_pos2 = (2132, 1961)
 
@@ -48,3 +51,4 @@ img_1_metadata = read_metadata(img_path1)
 img_2_metadata = read_metadata(img_path2)
 
 result = triangulate(img_1_metadata, img_2_metadata, img_pos1, img_pos2)
+print(result)
