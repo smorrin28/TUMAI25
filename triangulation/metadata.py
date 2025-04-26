@@ -60,6 +60,7 @@ def read_metadata(file_path: str | Path) -> DJIMetadata:
     else:
         dji_metadata = _metadata_to_dict(xmp_data[DJI_KEY_ALTERNATIVE])
     exif_metadata = _metadata_to_dict(xmp_data[EXIF_KEY])
+
     return DJIMetadata(
         relative_altitude=float(dji_metadata[RELATIVE_ALTITUDE]),
         absolute_altitude=float(dji_metadata[ABSOLUTE_ALTITUDE]),
