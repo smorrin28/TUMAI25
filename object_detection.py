@@ -12,8 +12,8 @@ from torchvision.ops import box_area
 import os
 import torch
 
-def predict_oois(folder_path: str) -> List[Results]:
-    model = YOLO('model/best.pt')
+def predict_oois(folder_path: str, model_path: str) -> List[Results]:
+    model = YOLO(model_path)
     
     # run inference and dump only .txt files
     results = model.predict(
@@ -237,8 +237,8 @@ def create_overall_bbox(boxes):
     overall_box = torch.stack([x_min, y_min, x_max, y_max])
     return overall_box
 
-def get_image_pairs(folder_path: str):
-    results = predict_oois(folder_path)
+def get_image_pairs(folder_path, model_path):
+    results = predict_oois(folder_path, model_path)
     results_with_objects = filter_results_by_object_num(results, min_num=1)
     paired_results = create_pairs(results_with_objects)
     print("Number of pairs:", len(paired_results))
@@ -260,7 +260,7 @@ def get_image_pairs(folder_path: str):
         r1, r2 = pair
         bbox1 = create_overall_bbox(r1.boxes.xyxy)
         bbox2 = create_overall_bbox(r2.boxes.xyxy)
-        final_list.append(((os.path.basename(r1.path), bbox1), (os.path.basename(r2.path), bbox2)))
+        final_list.append(((r1.path, bbox1), (r2.path, bbox2)))
         
     return final_list
     
