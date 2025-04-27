@@ -2,7 +2,7 @@ import numpy as np
 
 from dataclasses import dataclass
 from pyproj import Transformer
-from export import write_file
+from .export import write_file
 
 Point = np.typing.NDArray
 

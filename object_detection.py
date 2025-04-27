@@ -66,9 +66,8 @@ class DJIMetadata:
     image_width: int
     image_height: int
 
-
 DJI_KEY = "http://www.dji.com/drone-dji/1.0/"
-DJI_KEY_ALTERNATIVE = "http://www.uav.com/drone-dji/1.0/" # sometimes this key is used
+DJI_KEY_ALTERNATIVE = "http://www.uav.com/drone-dji/1.0/"  # sometimes this key is used
 EXIF_KEY = "http://ns.adobe.com/exif/1.0/"
 DJI_PREFIX = "drone-dji:"
 EXIF_PREFIX = "exif:"
@@ -92,12 +91,12 @@ def _metadata_to_dict(metadata: list[tuple]) -> dict[str, str]:
     Parses the DJI metadata into a dictionary
     """
     return {
-        entry[0] : entry[1] for entry in metadata
+        entry[0]: entry[1] for entry in metadata
     }
 
 def read_metadata(file_path: str | Path) -> DJIMetadata:
     """
-    Reads the relevant metadata from `file`
+    Reads the relevant metadata from file
     """
     xmp_data = file_to_dict(str(file_path))
     # two different keys may be used to identify the data
@@ -118,14 +117,15 @@ def read_metadata(file_path: str | Path) -> DJIMetadata:
         image_width=int(exif_metadata[IMAGE_WIDTH]),
         image_height=int(exif_metadata[IMAGE_HEIGHT])
     )
-    
+
 def latlong_in_geo(metadata: DJIMetadata):
-     # convert gps into x, y, z
+    # convert gps into x, y, z
     transformer = Transformer.from_crs("epsg:4326", "epsg:4978")  # WGS84 to ECEF
     x, y, z = transformer.transform(
         metadata.latitude,
         metadata.longitude,
-        metadata.absolute_altitude)
+        metadata.absolute_altitude
+    )
     return x, y, z
 
 def calculate_distance_3d(x1, y1, z1, x2, y2, z2):
@@ -171,8 +171,7 @@ def get_avg_pair_conf(pair: Tuple[Results, Results]):
     return (avg1 + avg2)
 
 def sort_by_conf(pairs: List[Tuple[Results, Results]]) -> List[Tuple[Results, Results]]:
-    sorted_pairs = sorted(pairs, key=get_avg_pair_conf, reverse=True)
-    return sorted_pairs
+    return sorted(pairs, key=get_avg_pair_conf, reverse=True)
 
 def get_avg_box_size(r: Results):
     areas = box_area(r.boxes.xyxy)
@@ -183,27 +182,11 @@ def get_avg_pair_box_size(pair: Tuple[Results, Results]):
     return get_avg_box_size(r1) + get_avg_box_size(r2)
 
 def sort_by_box_size(pairs: List[Tuple[Results, Results]]) -> List[Tuple[Results, Results]]:
-    sorted_pairs = sorted(pairs, key=get_avg_pair_box_size, reverse=True)
-    return sorted_pairs
+    return sorted(pairs, key=get_avg_pair_box_size, reverse=True)
 
 def combine_rankings_rrf(list1, list2, k: int = 60):
     """
     Combines two ranked lists using Reciprocal Rank Fusion (RRF).
-
-    Assumes lower index means better rank. Items are ranked based on their
-    position (index). The RRF score for an item is the sum of 1/(k + rank)
-    over all lists it appears in. Items not present in a list contribute 0
-    to the score from that list. The final ranking sorts items by RRF score
-    (higher score is better).
-
-    Args:
-        list1: The first list of items, ordered by rank (best first).
-        list2: The second list of items, ordered by rank (best first).
-        k: RRF constant (default 60). Controls how much lower ranks
-           are penalized relative to higher ranks.
-
-    Returns:
-        A new list of items, sorted by the combined RRF score (best first).
     """
     ranks1: Dict[Any, int] = {item: i for i, item in enumerate(list1)}
     ranks2: Dict[Any, int] = {item: i for i, item in enumerate(list2)}
@@ -211,56 +194,66 @@ def combine_rankings_rrf(list1, list2, k: int = 60):
 
     rrf_scores: Dict[Any, float] = {}
     for item in all_items:
-        score: float = 0.0
-        # Get rank from list1 if item exists
-        rank1: Optional[int] = ranks1.get(item)
+        score = 0.0
+        rank1 = ranks1.get(item)
         if rank1 is not None:
             score += 1.0 / (k + rank1)
-
-        # Get rank from list2 if item exists
-        rank2: Optional[int] = ranks2.get(item)
+        rank2 = ranks2.get(item)
         if rank2 is not None:
             score += 1.0 / (k + rank2)
-            
-
         rrf_scores[item] = score
 
-    # Sort items based on the RRF score (descending order - higher is better)
-    sorted_items: List[Any] = sorted(all_items, key=lambda item: rrf_scores[item], reverse=True)
-    return sorted_items
+    return sorted(all_items, key=lambda item: rrf_scores[item], reverse=True)
 
 def create_overall_bbox(boxes):
     x_min = boxes[:, 0].min()
     y_min = boxes[:, 1].min()
     x_max = boxes[:, 2].max()
     y_max = boxes[:, 3].max()
-    overall_box = torch.stack([x_min, y_min, x_max, y_max])
-    return overall_box
+    return torch.stack([x_min, y_min, x_max, y_max])
 
-def get_image_pairs(folder_path, model_path):
-    results = predict_oois(folder_path, model_path)
-    results_with_objects = filter_results_by_object_num(results, min_num=1)
-    paired_results = create_pairs(results_with_objects)
-    print("Number of pairs:", len(paired_results))
-    
-    conf_sorted = sort_by_conf(paired_results)
-    box_sorted = sort_by_box_size(paired_results)
-    
-    rankings_combined = combine_rankings_rrf(conf_sorted, box_sorted)
-    for idx, pair in enumerate(rankings_combined):
-        r1, r2 = pair
+def get_image_pairs(folder_path: str, model_path: str) -> List[Tuple[Tuple[str, any], Tuple[str, any]]]:
+    """
+    - Runs object detection on all images in `folder_path` with the given YOLO `model_path`.
+    - Filters out images with no detections.
+    - Pairs images by object count and by GPS distance.
+    - Ranks pairs by confidence and box-size, then fuses the rankings.
+    - Returns a list of ((full_path1, bbox1), (full_path2, bbox2)) tuples.
+    """
+    folder = Path(folder_path)
+    # 1) detect objects
+    results = predict_oois(str(folder), model_path)
+    # 2) drop images with zero detections
+    results = filter_results_by_object_num(results, min_num=1)
+    # 3) get candidate pairs (by count & distance)
+    pairs = create_pairs(results)
+    print("Number of pairs:", len(pairs))
+    # 4) rank by avg confidence and by avg box size
+    conf_sorted = sort_by_conf(pairs)
+    size_sorted = sort_by_box_size(pairs)
+    # 5) fuse the two rankings
+    fused = combine_rankings_rrf(conf_sorted, size_sorted)
+    # 6) print out for debugging
+    for idx, (r1, r2) in enumerate(fused):
         print('====================')
         print('Rank:', idx)
         print('Image 1:', r1.path)
         print('Image 2:', r2.path)
     print('====================')
-    
-    final_list = []
-    for pair in rankings_combined:
-        r1, r2 = pair
+    # 7) build the final list of (path, bbox) pairs, ensuring full paths
+    final_list: List[Tuple[Tuple[str, any], Tuple[str, any]]] = []
+    for r1, r2 in fused:
         bbox1 = create_overall_bbox(r1.boxes.xyxy)
         bbox2 = create_overall_bbox(r2.boxes.xyxy)
-        final_list.append(((r1.path, bbox1), (r2.path, bbox2)))
-        
+        p1 = Path(r1.path)
+        p2 = Path(r2.path)
+        # if the detector returned only a basename or wrong path, anchor it under folder
+        if not p1.exists():
+            p1 = folder / p1.name
+        if not p2.exists():
+            p2 = folder / p2.name
+        final_list.append(
+            ((str(p1), bbox1),
+             (str(p2), bbox2))
+        )
     return final_list
-    

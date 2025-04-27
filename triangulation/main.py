@@ -1,7 +1,7 @@
-from bbox import get_bbox_positions, image_bbox
-from flight_planning import generate_flight_plan, Position
-from metadata import read_metadata
-from export import write_file
+from .bbox            import get_bbox_positions, image_bbox
+from .flight_planning import generate_flight_plan, Position
+from .metadata        import read_metadata
+from .export          import write_file
 
 
 def write_flight_plan(image_pairs: list[tuple[image_bbox, image_bbox]], output_file="output.kmz", plane_distance=2.0, descend=1.5):
@@ -18,9 +18,9 @@ def write_flight_plan(image_pairs: list[tuple[image_bbox, image_bbox]], output_f
     write_file(flight_plan, output_file)
 
 
-if __name__ == "__main__":
+'''if __name__ == "__main__":
     images = [(
         ("/Users/smorrin/Downloads/dev_data/DJI_20250424193049_0053_V.jpeg", [1860, 1984, 1866, 2143]),
         ("/Users/smorrin/Downloads/dev_data/DJI_20250424193048_0052_V.jpeg", [2031, 1944, 2025, 2101]),
     )]
-    write_flight_plan(images)
+    write_flight_plan(images)'''
