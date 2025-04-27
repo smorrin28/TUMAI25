@@ -1,5 +1,6 @@
-from triangulate import triangulate, read_metadata
-from itertools import batched
+from .triangulate import triangulate
+from .metadata   import read_metadata
+from more_itertools import chunked as batched
 import numpy as np
 
 image_bbox = tuple[str, any]
@@ -7,7 +8,7 @@ image_bbox = tuple[str, any]
 def _triangulate_two_images(img1: image_bbox, img2: image_bbox):
     img1_path, img1_bbox = img1
     img2_path, img2_bbox = img2
-    
+    print(f"Triangulating {img1_path} and {img2_path}")
     img1_metadata, img2_metadata = read_metadata(img1_path), read_metadata(img2_path)
     points = []
     for p1, p2 in zip(batched(img1_bbox, n=2), batched(img2_bbox, n=2)):
@@ -23,6 +24,7 @@ def get_bbox_positions(images: list[tuple[image_bbox, image_bbox]]):
     """
     bbox = []
     for img1, img2 in images:
+        print(img1, img2)
         bbox.append(_triangulate_two_images(img1, img2))
     # return np.mean(bbox, axis=0)
     return bbox[0]

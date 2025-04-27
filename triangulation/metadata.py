@@ -50,7 +50,10 @@ def read_metadata(file_path: str | Path) -> DJIMetadata:
     """
     Reads the relevant metadata from `file`
     """
+    print(f"Reading metadata from {file_path}")
     xmp_data = file_to_dict(str(file_path))
+    print(f"XMP data: {xmp_data}")
+    print(f"Reading metadata from {file_path}")
     # two different keys may be used to identify the data
     if DJI_KEY in xmp_data:
         dji_metadata = _metadata_to_dict(xmp_data[DJI_KEY])

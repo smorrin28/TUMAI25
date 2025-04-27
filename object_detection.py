@@ -11,9 +11,12 @@ import numpy as np
 from torchvision.ops import box_area
 import os
 import torch
+from pathlib import Path
+from typing import List, Tuple
+from ultralytics.engine.results import Results
 
-def predict_oois(folder_path: str) -> List[Results]:
-    model = YOLO('model/best.pt')
+def predict_oois(folder_path: str, model_path: str) -> List[Results]:
+    model = YOLO(model_path)
     
     # run inference and dump only .txt files
     results = model.predict(
@@ -97,7 +100,7 @@ def _metadata_to_dict(metadata: list[tuple]) -> dict[str, str]:
 
 def read_metadata(file_path: str | Path) -> DJIMetadata:
     """
-    Reads the relevant metadata from `file`
+    Reads the relevant metadata from ⁠ file ⁠
     """
     xmp_data = file_to_dict(str(file_path))
     # two different keys may be used to identify the data
@@ -237,30 +240,48 @@ def create_overall_bbox(boxes):
     overall_box = torch.stack([x_min, y_min, x_max, y_max])
     return overall_box
 
-def get_image_pairs(folder_path: str):
-    results = predict_oois(folder_path)
-    results_with_objects = filter_results_by_object_num(results, min_num=1)
-    paired_results = create_pairs(results_with_objects)
-    print("Number of pairs:", len(paired_results))
-    
-    conf_sorted = sort_by_conf(paired_results)
-    box_sorted = sort_by_box_size(paired_results)
-    
-    rankings_combined = combine_rankings_rrf(conf_sorted, box_sorted)
-    for idx, pair in enumerate(rankings_combined):
-        r1, r2 = pair
+def get_image_pairs(folder_path: str, model_path: str) -> List[Tuple[Tuple[str, any], Tuple[str, any]]]:
+    """
+    - Runs object detection on all images in `folder_path` with the given YOLO `model_path`.
+    - Filters out images with no detections.
+    - Pairs images by object count and by GPS distance.
+    - Ranks pairs by confidence and box-size, then fuses the rankings.
+    - Returns a list of ((full_path1, bbox1), (full_path2, bbox2)) tuples.
+    """
+    folder = Path(folder_path)
+    # 1) detect objects
+    results = predict_oois(str(folder), model_path)
+    # 2) drop images with zero detections
+    results = filter_results_by_object_num(results, min_num=1)
+    # 3) get candidate pairs (by count & distance)
+    pairs = create_pairs(results)
+    print("Number of pairs:", len(pairs))
+    # 4) rank by avg confidence and by avg box size
+    conf_sorted = sort_by_conf(pairs)
+    size_sorted = sort_by_box_size(pairs)
+    # 5) fuse the two rankings
+    fused = combine_rankings_rrf(conf_sorted, size_sorted)
+    # 6) print out for debugging
+    for idx, (r1, r2) in enumerate(fused):
         print('====================')
         print('Rank:', idx)
         print('Image 1:', r1.path)
         print('Image 2:', r2.path)
     print('====================')
-    
-    final_list = []
-    for pair in rankings_combined:
-        r1, r2 = pair
+    # 7) build the final list of (path, bbox) pairs, ensuring full paths
+    final_list: List[Tuple[Tuple[str, any], Tuple[str, any]]] = []
+    for r1, r2 in fused:
         bbox1 = create_overall_bbox(r1.boxes.xyxy)
         bbox2 = create_overall_bbox(r2.boxes.xyxy)
-        final_list.append(((os.path.basename(r1.path), bbox1), (os.path.basename(r2.path), bbox2)))
-        
+        p1 = Path(r1.path)
+        p2 = Path(r2.path)
+        # if the detector returned only a basename or wrong path, anchor it under folder
+        if not p1.exists():
+            p1 = folder / p1.name
+        if not p2.exists():
+            p2 = folder / p2.name
+        final_list.append(
+            ((str(p1), bbox1),
+             (str(p2), bbox2))
+        )
     return final_list
-    

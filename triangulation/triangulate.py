@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 from pyproj import Transformer
-from metadata import DJIMetadata, read_metadata
+from .metadata import DJIMetadata, read_metadata
 from scipy.spatial.transform import Rotation as R
 
 # Camera calibration parameters (optimized values)
