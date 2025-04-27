@@ -55,7 +55,7 @@ def pair_by_box_counts(results: List[Results], tol=0) -> List[Tuple[Results, Res
 
 @dataclass
 class DJIMetadata:
-    relative_altitude: float
+    # relative_altitude: float
     absolute_altitude: float
     yaw: float
     pitch: float
@@ -72,7 +72,7 @@ EXIF_KEY = "http://ns.adobe.com/exif/1.0/"
 DJI_PREFIX = "drone-dji:"
 EXIF_PREFIX = "exif:"
 
-RELATIVE_ALTITUDE = f"{DJI_PREFIX}RelativeAltitude"
+# RELATIVE_ALTITUDE = f"{DJI_PREFIX}RelativeAltitude"
 ABSOLUTE_ALTITUDE = f"{DJI_PREFIX}AbsoluteAltitude"
 YAW = f"{DJI_PREFIX}GimbalYawDegree"
 PITCH = f"{DJI_PREFIX}GimbalPitchDegree"
@@ -106,7 +106,7 @@ def read_metadata(file_path: str | Path) -> DJIMetadata:
         dji_metadata = _metadata_to_dict(xmp_data[DJI_KEY_ALTERNATIVE])
     exif_metadata = _metadata_to_dict(xmp_data[EXIF_KEY])
     return DJIMetadata(
-        relative_altitude=float(dji_metadata[RELATIVE_ALTITUDE]),
+        # relative_altitude=float(dji_metadata[RELATIVE_ALTITUDE]),
         absolute_altitude=float(dji_metadata[ABSOLUTE_ALTITUDE]),
         yaw=float(dji_metadata[YAW]),
         pitch=float(dji_metadata[PITCH]),
